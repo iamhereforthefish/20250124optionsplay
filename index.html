@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Options Pricing Interface</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="chart.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Options Pricing Calculator</h1>
+            <p class="subtitle">Black-Scholes Model with Real-Time Market Data</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <h2>Market Data</h2>
+                <div class="ticker-lookup">
+                    <div class="input-group">
+                        <label for="ticker">Stock Ticker</label>
+                        <div class="ticker-input-wrapper">
+                            <input type="text" id="ticker" placeholder="e.g., AAPL" maxlength="5">
+                            <button id="fetch-btn" onclick="fetchMarketData()">Fetch Data</button>
+                        </div>
+                    </div>
+                    <div id="fetch-status" class="status-message"></div>
+                </div>
+
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="stock-price">Stock Price ($)</label>
+                        <input type="number" id="stock-price" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="input-group">
+                        <label for="strike-price">Strike Price ($)</label>
+                        <input type="number" id="strike-price" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="input-group">
+                        <label for="time-to-expiry">Time to Expiry (Days)</label>
+                        <input type="number" id="time-to-expiry" step="1" min="1" placeholder="30">
+                    </div>
+                    <div class="input-group">
+                        <label for="volatility">Implied Volatility (%)</label>
+                        <input type="number" id="volatility" step="0.1" min="0" placeholder="25">
+                    </div>
+                    <div class="input-group">
+                        <label for="risk-free-rate">Risk-Free Rate (%)</label>
+                        <input type="number" id="risk-free-rate" step="0.01" min="0" value="5.25" placeholder="5.25">
+                    </div>
+                    <div class="input-group">
+                        <label for="dividend-yield">Dividend Yield (%)</label>
+                        <input type="number" id="dividend-yield" step="0.01" min="0" value="0" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="option-type-selector">
+                    <label>Option Type</label>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-type="call" onclick="setOptionType('call')">Call</button>
+                        <button class="toggle-btn" data-type="put" onclick="setOptionType('put')">Put</button>
+                    </div>
+                </div>
+
+                <button class="calculate-btn" onclick="calculateOption()">Calculate Option Price</button>
+            </section>
+
+            <section class="results-section">
+                <h2>Pricing Results</h2>
+
+                <div class="price-display">
+                    <div class="price-card primary">
+                        <span class="price-label">Option Premium</span>
+                        <span class="price-value" id="option-premium">--</span>
+                    </div>
+                    <div class="price-card">
+                        <span class="price-label">Intrinsic Value</span>
+                        <span class="price-value" id="intrinsic-value">--</span>
+                    </div>
+                    <div class="price-card">
+                        <span class="price-label">Time Value</span>
+                        <span class="price-value" id="time-value">--</span>
+                    </div>
+                </div>
+
+                <h3>The Greeks</h3>
+                <div class="greeks-grid">
+                    <div class="greek-card">
+                        <div class="greek-header">
+                            <span class="greek-symbol">Δ</span>
+                            <span class="greek-name">Delta</span>
+                        </div>
+                        <span class="greek-value" id="delta">--</span>
+                        <span class="greek-desc">Price sensitivity to stock movement</span>
+                    </div>
+                    <div class="greek-card">
+                        <div class="greek-header">
+                            <span class="greek-symbol">Γ</span>
+                            <span class="greek-name">Gamma</span>
+                        </div>
+                        <span class="greek-value" id="gamma">--</span>
+                        <span class="greek-desc">Delta sensitivity to stock movement</span>
+                    </div>
+                    <div class="greek-card">
+                        <div class="greek-header">
+                            <span class="greek-symbol">Θ</span>
+                            <span class="greek-name">Theta</span>
+                        </div>
+                        <span class="greek-value" id="theta">--</span>
+                        <span class="greek-desc">Daily time decay (per day)</span>
+                    </div>
+                    <div class="greek-card">
+                        <div class="greek-header">
+                            <span class="greek-symbol">V</span>
+                            <span class="greek-name">Vega</span>
+                        </div>
+                        <span class="greek-value" id="vega">--</span>
+                        <span class="greek-desc">Sensitivity to 1% volatility change</span>
+                    </div>
+                    <div class="greek-card">
+                        <div class="greek-header">
+                            <span class="greek-symbol">ρ</span>
+                            <span class="greek-name">Rho</span>
+                        </div>
+                        <span class="greek-value" id="rho">--</span>
+                        <span class="greek-desc">Sensitivity to 1% rate change</span>
+                    </div>
+                </div>
+
+                <h3>Probability Analysis</h3>
+                <div class="probability-grid">
+                    <div class="prob-card">
+                        <span class="prob-label">Prob. ITM at Expiry</span>
+                        <span class="prob-value" id="prob-itm">--</span>
+                    </div>
+                    <div class="prob-card">
+                        <span class="prob-label">Prob. OTM at Expiry</span>
+                        <span class="prob-value" id="prob-otm">--</span>
+                    </div>
+                    <div class="prob-card">
+                        <span class="prob-label">Breakeven Price</span>
+                        <span class="prob-value" id="breakeven">--</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <section class="chart-section">
+            <h2>Profit/Loss Diagram</h2>
+            <div class="chart-controls">
+                <div class="chart-toggle">
+                    <label>Position:</label>
+                    <div class="toggle-group small">
+                        <button class="toggle-btn active" data-position="long" onclick="setPosition('long')">Long</button>
+                        <button class="toggle-btn" data-position="short" onclick="setPosition('short')">Short</button>
+                    </div>
+                </div>
+                <div class="chart-toggle">
+                    <label>Contracts:</label>
+                    <input type="number" id="num-contracts" value="1" min="1" max="100" onchange="updateChart()">
+                </div>
+                <div class="chart-legend">
+                    <span class="legend-item"><span class="legend-line at-expiry"></span> At Expiry</span>
+                    <span class="legend-item"><span class="legend-line current"></span> Current P/L</span>
+                    <span class="legend-item"><span class="legend-marker breakeven"></span> Breakeven</span>
+                    <span class="legend-item"><span class="legend-marker current-price"></span> Current Price</span>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="pl-chart"></canvas>
+                <div class="chart-tooltip" id="chart-tooltip"></div>
+            </div>
+            <div class="chart-stats">
+                <div class="stat-card profit">
+                    <span class="stat-label">Max Profit</span>
+                    <span class="stat-value" id="max-profit">--</span>
+                </div>
+                <div class="stat-card loss">
+                    <span class="stat-label">Max Loss</span>
+                    <span class="stat-value" id="max-loss">--</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Risk/Reward</span>
+                    <span class="stat-value" id="risk-reward">--</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Breakeven</span>
+                    <span class="stat-value" id="chart-breakeven">--</span>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>Prices calculated using the Black-Scholes-Merton model. For educational purposes only.</p>
+        </footer>
+    </div>
+
+    <script src="black-scholes.js"></script>
+    <script src="chart.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
