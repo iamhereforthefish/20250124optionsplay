@@ -5,17 +5,17 @@
 }
 
 :root {
-    --primary: #2563eb;
-    --primary-dark: #1d4ed8;
-    --success: #10b981;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-    --bg-dark: #0f172a;
-    --bg-card: #1e293b;
-    --bg-input: #334155;
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --border: #475569;
+    --primary: #0d7377;
+    --primary-dark: #095456;
+    --success: #047857;
+    --warning: #d97706;
+    --danger: #dc2626;
+    --bg-dark: #9AEFDF;
+    --bg-card: #44C1C1;
+    --bg-input: rgba(255, 255, 255, 0.9);
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --border: #2d9a9a;
 }
 
 body {
@@ -224,6 +224,7 @@ section h3 {
 
 .toggle-btn:hover:not(.active) {
     color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.5);
 }
 
 .calculate-btn {

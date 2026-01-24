@@ -1,11 +1,11 @@
 /* Seller's Yield Analysis Section */
 .yield-section {
     margin-top: 2rem;
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    background: linear-gradient(135deg, #44C1C1 0%, #2d9a9a 100%);
     border-radius: 12px;
     padding: 2rem;
     border: 2px solid var(--success);
-    box-shadow: 0 0 30px rgba(16, 185, 129, 0.1);
+    box-shadow: 0 0 30px rgba(4, 120, 87, 0.2);
 }
 
 .yield-section h2 {
@@ -97,19 +97,20 @@
 }
 
 .yield-card {
-    background: var(--bg-input);
+    background: rgba(255, 255, 255, 0.9);
     border-radius: 10px;
     padding: 1.25rem;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    border: 1px solid var(--border);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     transition: border-color 0.2s, transform 0.2s;
 }
 
 .yield-card:hover {
     border-color: var(--success);
     transform: translateY(-2px);
+    background: rgba(255, 255, 255, 1);
 }
 
 .yield-label {

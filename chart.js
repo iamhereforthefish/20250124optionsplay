@@ -10,18 +10,18 @@ const PLChart = {
     data: null,
     position: 'long',
 
-    // Chart colors
+    // Chart colors (light theme)
     colors: {
-        primary: '#2563eb',
-        purple: '#8b5cf6',
-        success: '#10b981',
-        danger: '#ef4444',
-        warning: '#f59e0b',
-        text: '#f1f5f9',
-        textSecondary: '#94a3b8',
-        grid: '#475569',
-        background: '#334155',
-        zero: '#64748b'
+        primary: '#0d7377',
+        purple: '#7c3aed',
+        success: '#047857',
+        danger: '#dc2626',
+        warning: '#d97706',
+        text: '#0f172a',
+        textSecondary: '#334155',
+        grid: '#44C1C1',
+        background: '#ffffff',
+        zero: '#2d9a9a'
     },
 
     // Chart padding
