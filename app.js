@@ -445,13 +445,57 @@ function formatPercent(value) {
     return (value * 100).toFixed(1) + '%';
 }
 
+// Debounce timer for ticker input
+let tickerDebounceTimer = null;
+
+/**
+ * Debounce function to limit API calls
+ */
+function debounce(func, delay) {
+    return function(...args) {
+        clearTimeout(tickerDebounceTimer);
+        tickerDebounceTimer = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+
+/**
+ * Auto-fetch stock price when ticker is entered
+ */
+function onTickerInput(e) {
+    const ticker = e.target.value.trim().toUpperCase();
+
+    // Only fetch if ticker is 1-5 characters (valid ticker length)
+    if (ticker.length >= 1 && ticker.length <= 5) {
+        // Show loading indicator
+        const statusEl = document.getElementById('fetch-status');
+        if (statusEl) {
+            statusEl.textContent = 'Fetching...';
+            statusEl.className = 'status-message loading';
+        }
+
+        // Fetch after debounce delay
+        debouncedFetch();
+    }
+}
+
+// Create debounced fetch function (500ms delay)
+const debouncedFetch = debounce(() => {
+    fetchMarketData();
+}, 500);
+
 /**
  * Initialize the application
  */
 function init() {
-    // Add enter key support for ticker input
-    document.getElementById('ticker').addEventListener('keypress', (e) => {
+    const tickerInput = document.getElementById('ticker');
+
+    // Auto-fetch on ticker input (with debounce)
+    tickerInput.addEventListener('input', onTickerInput);
+
+    // Also fetch on Enter key
+    tickerInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
+            clearTimeout(tickerDebounceTimer); // Cancel debounce
             fetchMarketData();
         }
     });
