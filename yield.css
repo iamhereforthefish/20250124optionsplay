@@ -1,0 +1,180 @@
+/* Seller's Yield Analysis Section */
+.yield-section {
+    margin-top: 2rem;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-radius: 12px;
+    padding: 2rem;
+    border: 2px solid var(--success);
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.1);
+}
+
+.yield-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+    color: var(--success);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.yield-section h2::before {
+    content: '$';
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+.yield-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Hero Yield Display */
+.yield-hero {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.yield-hero-card {
+    background: linear-gradient(135deg, var(--success), #059669);
+    border-radius: 16px;
+    padding: 2rem 4rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
+}
+
+.yield-hero-label {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+}
+
+.yield-hero-value {
+    font-size: 4rem;
+    font-weight: 800;
+    color: white;
+    line-height: 1;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.yield-hero-sublabel {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Yield Grid */
+.yield-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 900px) {
+    .yield-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 500px) {
+    .yield-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .yield-hero-card {
+        padding: 1.5rem 2rem;
+    }
+
+    .yield-hero-value {
+        font-size: 3rem;
+    }
+}
+
+.yield-card {
+    background: var(--bg-input);
+    border-radius: 10px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border: 1px solid var(--border);
+    transition: border-color 0.2s, transform 0.2s;
+}
+
+.yield-card:hover {
+    border-color: var(--success);
+    transform: translateY(-2px);
+}
+
+.yield-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+}
+
+.yield-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--success);
+}
+
+.yield-desc {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+/* Assigned Section */
+.yield-assigned {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+}
+
+.yield-assigned h3 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.yield-assigned-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+@media (max-width: 700px) {
+    .yield-assigned-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Color variations for different yield values */
+.yield-value.excellent {
+    color: #10b981;
+}
+
+.yield-value.good {
+    color: #34d399;
+}
+
+.yield-value.moderate {
+    color: #fbbf24;
+}
+
+.yield-value.low {
+    color: var(--text-secondary);
+}
+
+.yield-value.negative {
+    color: var(--danger);
+}

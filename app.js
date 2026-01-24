@@ -1,9 +1,17 @@
 /**
  * Options Pricing Interface - Main Application
+ * Using MarketData.app API for real-time options data
  */
+
+// MarketData.app API configuration
+const MARKETDATA_API = {
+    baseUrl: 'https://api.marketdata.app/v1',
+    token: 'X0htSHRqcThNTGJuOUVOb1YxQVRMcGN3cl9XdTd2Y3lrV2ZWN2wzc2FQMD0'
+};
 
 // Application state
 let currentOptionType = 'call';
+let optionsChainData = null;
 
 /**
  * Set the option type (call or put)
@@ -21,8 +29,7 @@ function setOptionType(type) {
 }
 
 /**
- * Fetch market data from API
- * Uses Yahoo Finance via a CORS proxy or alternative APIs
+ * Fetch market data from MarketData.app API
  */
 async function fetchMarketData() {
     const ticker = document.getElementById('ticker').value.trim().toUpperCase();
@@ -42,60 +49,39 @@ async function fetchMarketData() {
     statusEl.className = 'status-message loading';
 
     try {
-        // Try multiple data sources
-        let data = null;
+        // Fetch stock quote
+        const stockData = await fetchStockQuote(ticker);
 
-        // Option 1: Try Yahoo Finance via public API
+        // Populate stock price
+        document.getElementById('stock-price').value = stockData.price.toFixed(2);
+
+        // Set a default strike price (at-the-money, rounded to nearest 5)
+        const strike = Math.round(stockData.price / 5) * 5;
+        document.getElementById('strike-price').value = strike.toFixed(2);
+
+        // Set default expiry if not set
+        if (!document.getElementById('time-to-expiry').value) {
+            document.getElementById('time-to-expiry').value = 30;
+        }
+
+        // Fetch options chain to get IV
         try {
-            data = await fetchYahooFinance(ticker);
+            const optionsData = await fetchOptionsChain(ticker);
+            if (optionsData && optionsData.iv) {
+                document.getElementById('volatility').value = (optionsData.iv * 100).toFixed(1);
+            }
+            optionsChainData = optionsData;
         } catch (e) {
-            console.log('Yahoo Finance failed, trying alternative...');
+            console.log('Options chain fetch failed, using default IV');
+            document.getElementById('volatility').value = '25';
         }
 
-        // Option 2: Try Finnhub (free tier)
-        if (!data) {
-            try {
-                data = await fetchFinnhub(ticker);
-            } catch (e) {
-                console.log('Finnhub failed, trying alternative...');
-            }
-        }
-
-        // Option 3: Try Alpha Vantage
-        if (!data) {
-            try {
-                data = await fetchAlphaVantage(ticker);
-            } catch (e) {
-                console.log('Alpha Vantage failed');
-            }
-        }
-
-        if (data) {
-            // Populate fields
-            document.getElementById('stock-price').value = data.price.toFixed(2);
-
-            if (data.volatility) {
-                document.getElementById('volatility').value = (data.volatility * 100).toFixed(1);
-            }
-
-            // Set a default strike price (at-the-money)
-            const strike = Math.round(data.price);
-            document.getElementById('strike-price').value = strike.toFixed(2);
-
-            // Set default expiry if not set
-            if (!document.getElementById('time-to-expiry').value) {
-                document.getElementById('time-to-expiry').value = 30;
-            }
-
-            statusEl.textContent = `Loaded: ${ticker} @ $${data.price.toFixed(2)}`;
-            statusEl.className = 'status-message success';
-        } else {
-            throw new Error('Unable to fetch data from any source');
-        }
+        statusEl.textContent = `Loaded: ${ticker} @ $${stockData.price.toFixed(2)}`;
+        statusEl.className = 'status-message success';
 
     } catch (error) {
         console.error('Error fetching data:', error);
-        statusEl.textContent = `Error: ${error.message}. Try entering data manually.`;
+        statusEl.textContent = `Error: ${error.message}`;
         statusEl.className = 'status-message error';
     } finally {
         fetchBtn.disabled = false;
@@ -104,111 +90,138 @@ async function fetchMarketData() {
 }
 
 /**
- * Fetch data from Yahoo Finance
+ * Fetch stock quote from MarketData.app
  */
-async function fetchYahooFinance(ticker) {
-    // Using a public Yahoo Finance endpoint
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1mo`;
+async function fetchStockQuote(ticker) {
+    const url = `${MARKETDATA_API.baseUrl}/stocks/quotes/${ticker}/`;
 
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('Yahoo Finance request failed');
-
-    const data = await response.json();
-
-    if (data.chart.error) {
-        throw new Error(data.chart.error.description);
-    }
-
-    const result = data.chart.result[0];
-    const meta = result.meta;
-    const quotes = result.indicators.quote[0];
-
-    // Calculate historical volatility from the last month's data
-    const closes = quotes.close.filter(c => c !== null);
-    const volatility = calculateHistoricalVolatility(closes);
-
-    return {
-        price: meta.regularMarketPrice,
-        volatility: volatility,
-        previousClose: meta.previousClose
-    };
-}
-
-/**
- * Fetch data from Finnhub (requires API key)
- */
-async function fetchFinnhub(ticker) {
-    // Note: You'll need to add your own API key for production use
-    const apiKey = 'demo'; // Replace with your Finnhub API key
-    const url = `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${apiKey}`;
-
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('Finnhub request failed');
-
-    const data = await response.json();
-
-    if (!data.c || data.c === 0) {
-        throw new Error('No data available');
-    }
-
-    return {
-        price: data.c, // Current price
-        previousClose: data.pc,
-        volatility: null // Finnhub doesn't provide volatility in quote
-    };
-}
-
-/**
- * Fetch data from Alpha Vantage (requires API key)
- */
-async function fetchAlphaVantage(ticker) {
-    // Note: You'll need to add your own API key for production use
-    const apiKey = 'demo'; // Replace with your Alpha Vantage API key
-    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${apiKey}`;
-
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('Alpha Vantage request failed');
-
-    const data = await response.json();
-    const quote = data['Global Quote'];
-
-    if (!quote || !quote['05. price']) {
-        throw new Error('No data available');
-    }
-
-    return {
-        price: parseFloat(quote['05. price']),
-        previousClose: parseFloat(quote['08. previous close']),
-        volatility: null
-    };
-}
-
-/**
- * Calculate historical volatility from price data
- * @param {number[]} prices - Array of closing prices
- * @returns {number} Annualized volatility
- */
-function calculateHistoricalVolatility(prices) {
-    if (prices.length < 2) return 0.25; // Default to 25% if not enough data
-
-    // Calculate daily returns
-    const returns = [];
-    for (let i = 1; i < prices.length; i++) {
-        if (prices[i] && prices[i - 1]) {
-            returns.push(Math.log(prices[i] / prices[i - 1]));
+    const response = await fetch(url, {
+        headers: {
+            'Authorization': `Token ${MARKETDATA_API.token}`
         }
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.errmsg || `API request failed: ${response.status}`);
     }
 
-    if (returns.length < 2) return 0.25;
+    const data = await response.json();
 
-    // Calculate standard deviation of returns
-    const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
-    const squaredDiffs = returns.map(r => Math.pow(r - mean, 2));
-    const variance = squaredDiffs.reduce((a, b) => a + b, 0) / (returns.length - 1);
-    const dailyVol = Math.sqrt(variance);
+    if (data.s !== 'ok' || !data.last || data.last.length === 0) {
+        throw new Error('No data available for this symbol');
+    }
 
-    // Annualize (252 trading days)
-    return dailyVol * Math.sqrt(252);
+    return {
+        price: data.last[0],
+        bid: data.bid ? data.bid[0] : null,
+        ask: data.ask ? data.ask[0] : null,
+        volume: data.volume ? data.volume[0] : null,
+        change: data.change ? data.change[0] : null
+    };
+}
+
+/**
+ * Fetch options chain from MarketData.app
+ */
+async function fetchOptionsChain(ticker) {
+    // Get expiration dates first
+    const expUrl = `${MARKETDATA_API.baseUrl}/options/expirations/${ticker}/`;
+
+    const expResponse = await fetch(expUrl, {
+        headers: {
+            'Authorization': `Token ${MARKETDATA_API.token}`
+        }
+    });
+
+    if (!expResponse.ok) {
+        throw new Error('Failed to fetch options expirations');
+    }
+
+    const expData = await expResponse.json();
+
+    if (expData.s !== 'ok' || !expData.expirations || expData.expirations.length === 0) {
+        throw new Error('No options available for this symbol');
+    }
+
+    // Use the nearest expiration date
+    const nearestExpiry = expData.expirations[0];
+
+    // Fetch options chain for that expiration
+    const chainUrl = `${MARKETDATA_API.baseUrl}/options/chain/${ticker}/?expiration=${nearestExpiry}`;
+
+    const chainResponse = await fetch(chainUrl, {
+        headers: {
+            'Authorization': `Token ${MARKETDATA_API.token}`
+        }
+    });
+
+    if (!chainResponse.ok) {
+        throw new Error('Failed to fetch options chain');
+    }
+
+    const chainData = await chainResponse.json();
+
+    if (chainData.s !== 'ok') {
+        throw new Error('Invalid options chain data');
+    }
+
+    // Calculate average IV from the chain
+    let totalIV = 0;
+    let ivCount = 0;
+
+    if (chainData.iv && chainData.iv.length > 0) {
+        chainData.iv.forEach(iv => {
+            if (iv && iv > 0 && iv < 5) { // Filter reasonable IV values
+                totalIV += iv;
+                ivCount++;
+            }
+        });
+    }
+
+    const avgIV = ivCount > 0 ? totalIV / ivCount : 0.25;
+
+    return {
+        expiration: nearestExpiry,
+        iv: avgIV,
+        chain: chainData
+    };
+}
+
+/**
+ * Fetch specific option quote
+ */
+async function fetchOptionQuote(optionSymbol) {
+    const url = `${MARKETDATA_API.baseUrl}/options/quotes/${optionSymbol}/`;
+
+    const response = await fetch(url, {
+        headers: {
+            'Authorization': `Token ${MARKETDATA_API.token}`
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch option quote');
+    }
+
+    const data = await response.json();
+
+    if (data.s !== 'ok') {
+        throw new Error('Invalid option data');
+    }
+
+    return {
+        bid: data.bid ? data.bid[0] : null,
+        ask: data.ask ? data.ask[0] : null,
+        last: data.last ? data.last[0] : null,
+        iv: data.iv ? data.iv[0] : null,
+        delta: data.delta ? data.delta[0] : null,
+        gamma: data.gamma ? data.gamma[0] : null,
+        theta: data.theta ? data.theta[0] : null,
+        vega: data.vega ? data.vega[0] : null,
+        openInterest: data.openInterest ? data.openInterest[0] : null,
+        volume: data.volume ? data.volume[0] : null
+    };
 }
 
 /**
@@ -267,6 +280,131 @@ function calculateOption() {
     updateDisplay('prob-itm', formatPercent(probITM));
     updateDisplay('prob-otm', formatPercent(1 - probITM));
     updateDisplay('breakeven', formatCurrency(breakeven));
+
+    // Update P/L chart
+    if (typeof updateChart === 'function') {
+        updateChart();
+    }
+
+    // Update Seller's Yield Analysis
+    calculateYieldAnalysis(S, K, days, results.price, currentOptionType);
+}
+
+/**
+ * Calculate and display seller's yield analysis
+ * @param {number} S - Stock price
+ * @param {number} K - Strike price
+ * @param {number} days - Days to expiry
+ * @param {number} premium - Option premium
+ * @param {string} type - 'call' or 'put'
+ */
+function calculateYieldAnalysis(S, K, days, premium, type) {
+    // Period yield: Premium / Stock Price
+    const periodYield = premium / S;
+
+    // Annualized yield: Period yield * (365 / days)
+    const annualizedYield = periodYield * (365 / days);
+
+    // Premium per day (theta-based income)
+    const premiumPerDay = premium / days;
+
+    // Monthly equivalent yield (if repeated 12x per year)
+    const monthlyYield = annualizedYield / 12;
+
+    // Capital required
+    // For calls (covered call): Stock price * 100 shares
+    // For puts (cash-secured put): Strike price * 100 shares
+    const capitalRequired = type === 'call' ? S * 100 : K * 100;
+
+    // If assigned calculations
+    let assignedReturn, assignedAnnualized, effectivePrice;
+
+    if (type === 'call') {
+        // Covered call: sell stock at strike, keep premium
+        // Return = (Premium + (Strike - Stock Price)) / Stock Price
+        const totalReturn = premium + (K - S);
+        assignedReturn = totalReturn / S;
+        assignedAnnualized = assignedReturn * (365 / days);
+        // Effective sell price = Strike + Premium
+        effectivePrice = K + premium;
+    } else {
+        // Cash-secured put: buy stock at strike, keep premium
+        // Effective buy price = Strike - Premium
+        effectivePrice = K - premium;
+        // Return = Premium / Strike (since you're committing strike amount)
+        assignedReturn = premium / K;
+        assignedAnnualized = assignedReturn * (365 / days);
+    }
+
+    // Update display
+    updateDisplay('annualized-yield', formatYieldPercent(annualizedYield));
+    updateDisplay('dte-display', days.toString());
+    updateDisplay('period-yield', formatYieldPercent(periodYield));
+    updateDisplay('premium-per-day', formatCurrency(premiumPerDay));
+    updateDisplay('monthly-yield', formatYieldPercent(monthlyYield));
+    updateDisplay('capital-required', formatCurrency(capitalRequired));
+
+    // Update capital description based on option type
+    const capitalDesc = document.getElementById('capital-desc');
+    if (capitalDesc) {
+        capitalDesc.textContent = type === 'call' ? 'Stock ownership (100 shares)' : 'Cash to secure put';
+    }
+
+    // If assigned section
+    updateDisplay('assigned-return', formatYieldPercent(assignedReturn));
+    updateDisplay('assigned-annualized', formatYieldPercent(assignedAnnualized));
+    updateDisplay('effective-price', formatCurrency(effectivePrice));
+
+    // Update assigned description based on option type
+    const assignedDesc = document.getElementById('assigned-desc');
+    if (assignedDesc) {
+        assignedDesc.textContent = type === 'call'
+            ? 'Premium + (Strike - Stock)'
+            : 'Premium / Strike price';
+    }
+
+    const effectiveDesc = document.getElementById('effective-desc');
+    if (effectiveDesc) {
+        effectiveDesc.textContent = type === 'call'
+            ? 'Net sale price if called away'
+            : 'Net cost basis if assigned';
+    }
+
+    // Apply color classes based on yield quality
+    applyYieldColor('annualized-yield', annualizedYield);
+    applyYieldColor('period-yield', periodYield);
+    applyYieldColor('monthly-yield', monthlyYield);
+    applyYieldColor('assigned-annualized', assignedAnnualized);
+}
+
+/**
+ * Apply color class based on yield value
+ */
+function applyYieldColor(elementId, yieldValue) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+
+    el.classList.remove('excellent', 'good', 'moderate', 'low', 'negative');
+
+    if (yieldValue < 0) {
+        el.classList.add('negative');
+    } else if (yieldValue >= 0.30) { // 30%+ annualized
+        el.classList.add('excellent');
+    } else if (yieldValue >= 0.15) { // 15-30%
+        el.classList.add('good');
+    } else if (yieldValue >= 0.08) { // 8-15%
+        el.classList.add('moderate');
+    } else {
+        el.classList.add('low');
+    }
+}
+
+/**
+ * Format yield as percentage with 2 decimal places
+ */
+function formatYieldPercent(value) {
+    if (isNaN(value) || !isFinite(value)) return '--%';
+    return (value * 100).toFixed(2) + '%';
 }
 
 /**

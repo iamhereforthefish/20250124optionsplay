@@ -6,6 +6,7 @@
     <title>Options Pricing Interface</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="chart.css">
+    <link rel="stylesheet" href="yield.css">
 </head>
 <body>
     <div class="container">
@@ -145,6 +146,64 @@
                 </div>
             </section>
         </main>
+
+        <!-- Seller's Yield Analysis - Prominent Section -->
+        <section class="yield-section">
+            <h2>Seller's Yield Analysis</h2>
+            <p class="yield-subtitle">Premium income analysis for selling options</p>
+
+            <div class="yield-hero">
+                <div class="yield-hero-card">
+                    <span class="yield-hero-label">Annualized Yield</span>
+                    <span class="yield-hero-value" id="annualized-yield">--%</span>
+                    <span class="yield-hero-sublabel">Based on <span id="dte-display">--</span> days to expiry</span>
+                </div>
+            </div>
+
+            <div class="yield-grid">
+                <div class="yield-card">
+                    <span class="yield-label">Premium Yield (Period)</span>
+                    <span class="yield-value" id="period-yield">--%</span>
+                    <span class="yield-desc">Premium / Stock Price</span>
+                </div>
+                <div class="yield-card">
+                    <span class="yield-label">Premium per Day</span>
+                    <span class="yield-value" id="premium-per-day">--</span>
+                    <span class="yield-desc">Daily theta income</span>
+                </div>
+                <div class="yield-card">
+                    <span class="yield-label">Monthly Equivalent</span>
+                    <span class="yield-value" id="monthly-yield">--%</span>
+                    <span class="yield-desc">If repeated 12x/year</span>
+                </div>
+                <div class="yield-card">
+                    <span class="yield-label">Capital Required</span>
+                    <span class="yield-value" id="capital-required">--</span>
+                    <span class="yield-desc" id="capital-desc">To secure position</span>
+                </div>
+            </div>
+
+            <div class="yield-assigned">
+                <h3>If Assigned at Expiration</h3>
+                <div class="yield-assigned-grid">
+                    <div class="yield-card">
+                        <span class="yield-label">Total Return if Assigned</span>
+                        <span class="yield-value" id="assigned-return">--%</span>
+                        <span class="yield-desc" id="assigned-desc">Premium + stock gain/loss</span>
+                    </div>
+                    <div class="yield-card">
+                        <span class="yield-label">Annualized if Assigned</span>
+                        <span class="yield-value" id="assigned-annualized">--%</span>
+                        <span class="yield-desc">Total return annualized</span>
+                    </div>
+                    <div class="yield-card">
+                        <span class="yield-label">Effective Buy/Sell Price</span>
+                        <span class="yield-value" id="effective-price">--</span>
+                        <span class="yield-desc" id="effective-desc">Net cost basis</span>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <section class="chart-section">
             <h2>Profit/Loss Diagram</h2>
