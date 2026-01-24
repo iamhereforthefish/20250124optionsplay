@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Options Pricing Interface</title>
+    <title>Options Yield Finder</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="chart.css">
     <link rel="stylesheet" href="yield.css">
@@ -11,81 +11,131 @@
 <body>
     <div class="container">
         <header>
-            <h1>Options Pricing Calculator</h1>
-            <p class="subtitle">Black-Scholes Model with Real-Time Market Data</p>
+            <h1>Options Yield Finder</h1>
+            <p class="subtitle">Find the highest yielding options to sell</p>
         </header>
 
         <main>
             <section class="input-section">
-                <h2>Market Data</h2>
+                <h2>Select Option Contract</h2>
+
+                <!-- Ticker Input -->
                 <div class="ticker-lookup">
                     <div class="input-group">
                         <label for="ticker">Stock Ticker</label>
                         <div class="ticker-input-wrapper">
                             <input type="text" id="ticker" placeholder="e.g., AAPL" maxlength="5">
-                            <button id="fetch-btn" onclick="fetchMarketData()">Fetch Data</button>
                         </div>
                     </div>
+                    <div id="stock-name" class="stock-name"></div>
                     <div id="fetch-status" class="status-message"></div>
                 </div>
 
-                <div class="input-grid">
-                    <div class="input-group">
-                        <label for="stock-price">Stock Price ($)</label>
-                        <input type="number" id="stock-price" step="0.01" min="0" placeholder="0.00">
+                <!-- Stock Price Display -->
+                <div class="stock-quote-display">
+                    <div class="quote-item">
+                        <span class="quote-label">Stock Price</span>
+                        <span class="quote-value" id="stock-price-display">--</span>
                     </div>
-                    <div class="input-group">
-                        <label for="strike-price">Strike Price ($)</label>
-                        <input type="number" id="strike-price" step="0.01" min="0" placeholder="0.00">
+                    <div class="quote-item">
+                        <span class="quote-label">Bid</span>
+                        <span class="quote-value" id="stock-bid">--</span>
                     </div>
-                    <div class="input-group">
-                        <label for="time-to-expiry">Time to Expiry (Days)</label>
-                        <input type="number" id="time-to-expiry" step="1" min="1" placeholder="30">
-                    </div>
-                    <div class="input-group">
-                        <label for="volatility">Implied Volatility (%)</label>
-                        <input type="number" id="volatility" step="0.1" min="0" placeholder="25">
-                    </div>
-                    <div class="input-group">
-                        <label for="risk-free-rate">Risk-Free Rate (%)</label>
-                        <input type="number" id="risk-free-rate" step="0.01" min="0" value="5.25" placeholder="5.25">
-                    </div>
-                    <div class="input-group">
-                        <label for="dividend-yield">Dividend Yield (%)</label>
-                        <input type="number" id="dividend-yield" step="0.01" min="0" value="0" placeholder="0">
+                    <div class="quote-item">
+                        <span class="quote-label">Ask</span>
+                        <span class="quote-value" id="stock-ask">--</span>
                     </div>
                 </div>
 
+                <!-- Option Type Selector -->
                 <div class="option-type-selector">
                     <label>Option Type</label>
                     <div class="toggle-group">
-                        <button class="toggle-btn active" data-type="call" onclick="setOptionType('call')">Call</button>
-                        <button class="toggle-btn" data-type="put" onclick="setOptionType('put')">Put</button>
+                        <button class="toggle-btn" data-type="call" onclick="setOptionType('call')">Call</button>
+                        <button class="toggle-btn active" data-type="put" onclick="setOptionType('put')">Put</button>
                     </div>
                 </div>
 
-                <button class="calculate-btn" onclick="calculateOption()">Calculate Option Price</button>
+                <!-- Expiration Date Selector -->
+                <div class="input-group">
+                    <label for="expiration-select">Expiration Date</label>
+                    <select id="expiration-select" onchange="onExpirationChange()">
+                        <option value="">-- Select Expiration --</option>
+                    </select>
+                </div>
+
+                <!-- Days to Maturity (Auto-calculated) -->
+                <div class="input-group">
+                    <label>Days to Maturity</label>
+                    <div class="calculated-value" id="days-to-maturity">--</div>
+                </div>
+
+                <!-- Strike Price Selector -->
+                <div class="input-group">
+                    <label for="strike-select">Strike Price</label>
+                    <select id="strike-select" onchange="onStrikeChange()">
+                        <option value="">-- Select Strike --</option>
+                    </select>
+                </div>
+
+                <button class="calculate-btn" onclick="fetchOptionQuote()">Get Option Quote</button>
+
+                <!-- Option Bid/Ask Display -->
+                <div class="option-quote-display" id="option-quote-section" style="display: none;">
+                    <h3>Market Option Quote</h3>
+
+                    <!-- Current Price Hero (used for yield calculation) -->
+                    <div class="current-price-hero">
+                        <span class="current-price-label">Current Price (Mid)</span>
+                        <span class="current-price-value" id="current-price">--</span>
+                        <span class="current-price-sublabel">Average of Bid & Ask - Used for Yield Calculation</span>
+                    </div>
+
+                    <!-- Bid/Ask Grid -->
+                    <div class="bid-ask-grid">
+                        <div class="quote-card bid">
+                            <span class="quote-card-label">Bid</span>
+                            <span class="quote-card-value" id="option-bid">--</span>
+                            <span class="quote-card-sublabel">Sell at this price</span>
+                        </div>
+                        <div class="quote-card ask">
+                            <span class="quote-card-label">Ask</span>
+                            <span class="quote-card-value" id="option-ask">--</span>
+                            <span class="quote-card-sublabel">Buy at this price</span>
+                        </div>
+                        <div class="quote-card last">
+                            <span class="quote-card-label">Last Trade</span>
+                            <span class="quote-card-value" id="option-last">--</span>
+                            <span class="quote-card-sublabel">Most recent</span>
+                        </div>
+                    </div>
+
+                    <!-- Volume & Open Interest (Prominent) -->
+                    <div class="volume-oi-grid">
+                        <div class="volume-oi-card">
+                            <span class="volume-oi-label">Today's Volume</span>
+                            <span class="volume-oi-value" id="option-volume">--</span>
+                            <span class="volume-oi-sublabel">Contracts traded today</span>
+                        </div>
+                        <div class="volume-oi-card">
+                            <span class="volume-oi-label">Open Interest</span>
+                            <span class="volume-oi-value" id="option-oi">--</span>
+                            <span class="volume-oi-sublabel">Outstanding contracts</span>
+                        </div>
+                    </div>
+
+                    <!-- IV -->
+                    <div class="iv-display">
+                        <span class="iv-label">Implied Volatility</span>
+                        <span class="iv-value" id="option-iv">--</span>
+                    </div>
+                </div>
             </section>
 
             <section class="results-section">
-                <h2>Pricing Results</h2>
+                <h2>Market Greeks</h2>
+                <p class="section-subtitle">From MarketData.app options data</p>
 
-                <div class="price-display">
-                    <div class="price-card primary">
-                        <span class="price-label">Option Premium</span>
-                        <span class="price-value" id="option-premium">--</span>
-                    </div>
-                    <div class="price-card">
-                        <span class="price-label">Intrinsic Value</span>
-                        <span class="price-value" id="intrinsic-value">--</span>
-                    </div>
-                    <div class="price-card">
-                        <span class="price-label">Time Value</span>
-                        <span class="price-value" id="time-value">--</span>
-                    </div>
-                </div>
-
-                <h3>The Greeks</h3>
                 <div class="greeks-grid">
                     <div class="greek-card">
                         <div class="greek-header">
@@ -129,19 +179,20 @@
                     </div>
                 </div>
 
-                <h3>Probability Analysis</h3>
-                <div class="probability-grid">
-                    <div class="prob-card">
-                        <span class="prob-label">Prob. ITM at Expiry</span>
-                        <span class="prob-value" id="prob-itm">--</span>
+                <h3>Black-Scholes Comparison</h3>
+                <p class="section-subtitle">Theoretical pricing for reference</p>
+                <div class="price-display">
+                    <div class="price-card">
+                        <span class="price-label">BS Theoretical Price</span>
+                        <span class="price-value" id="bs-price">--</span>
                     </div>
-                    <div class="prob-card">
-                        <span class="prob-label">Prob. OTM at Expiry</span>
-                        <span class="prob-value" id="prob-otm">--</span>
+                    <div class="price-card">
+                        <span class="price-label">Intrinsic Value</span>
+                        <span class="price-value" id="intrinsic-value">--</span>
                     </div>
-                    <div class="prob-card">
-                        <span class="prob-label">Breakeven Price</span>
-                        <span class="prob-value" id="breakeven">--</span>
+                    <div class="price-card">
+                        <span class="price-label">Time Value</span>
+                        <span class="price-value" id="time-value">--</span>
                     </div>
                 </div>
             </section>
@@ -150,7 +201,7 @@
         <!-- Seller's Yield Analysis - Prominent Section -->
         <section class="yield-section">
             <h2>Seller's Yield Analysis</h2>
-            <p class="yield-subtitle">Premium income analysis for selling options</p>
+            <p class="yield-subtitle">Premium income for selling this option (using mid price: avg of bid & ask)</p>
 
             <div class="yield-hero">
                 <div class="yield-hero-card">
@@ -211,8 +262,8 @@
                 <div class="chart-toggle">
                     <label>Position:</label>
                     <div class="toggle-group small">
-                        <button class="toggle-btn active" data-position="long" onclick="setPosition('long')">Long</button>
-                        <button class="toggle-btn" data-position="short" onclick="setPosition('short')">Short</button>
+                        <button class="toggle-btn" data-position="long" onclick="setPosition('long')">Long</button>
+                        <button class="toggle-btn active" data-position="short" onclick="setPosition('short')">Short</button>
                     </div>
                 </div>
                 <div class="chart-toggle">
@@ -251,7 +302,7 @@
         </section>
 
         <footer>
-            <p>Prices calculated using the Black-Scholes-Merton model. For educational purposes only.</p>
+            <p>Real-time options data from MarketData.app. Black-Scholes shown for reference only.</p>
         </footer>
     </div>
 
