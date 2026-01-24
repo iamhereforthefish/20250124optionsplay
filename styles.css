@@ -415,6 +415,53 @@ select:focus {
     color: var(--primary);
 }
 
+/* Copy Order Button */
+.copy-order-btn {
+    width: 100%;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, #1e40af, #3b82f6);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.copy-order-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
+}
+
+.copy-order-btn:active {
+    transform: translateY(0);
+}
+
+.copy-icon {
+    font-size: 1.2rem;
+}
+
+.copy-status {
+    text-align: center;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    min-height: 1.25rem;
+}
+
+.copy-status.success {
+    color: var(--success);
+}
+
+.copy-status.error {
+    color: var(--danger);
+}
+
 .option-quote-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
