@@ -27,7 +27,7 @@ let tickerDebounceTimer = null;
 /**
  * Set the option type (call or put)
  */
-function setOptionType(type) {
+async function setOptionType(type) {
     currentOptionType = type;
 
     // Update UI
@@ -40,7 +40,11 @@ function setOptionType(type) {
 
     // If we have data, refresh the strike dropdown and recalculate
     if (currentExpiration && currentTicker) {
-        fetchStrikes(currentTicker, currentExpiration);
+        await fetchStrikes(currentTicker, currentExpiration);
+        // Also refresh the quick quote if a strike is selected
+        if (currentStrike) {
+            onStrikeChange();
+        }
     }
 }
 
@@ -114,6 +118,7 @@ async function fetchMarketData(ticker) {
  */
 async function fetchStockQuote(ticker) {
     const url = `${MARKETDATA_API.baseUrl}/stocks/quotes/${ticker}/`;
+    console.log('Fetching stock quote from:', url);
 
     const response = await fetch(url, {
         headers: {
@@ -121,19 +126,37 @@ async function fetchStockQuote(ticker) {
         }
     });
 
+    console.log('Stock quote response status:', response.status);
+
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('Stock quote error:', errorData);
         throw new Error(errorData.errmsg || `API request failed: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log('Stock quote data:', data);
 
-    if (data.s !== 'ok' || !data.last || data.last.length === 0) {
-        throw new Error('No data available for this symbol');
+    if (data.s !== 'ok') {
+        throw new Error(data.errmsg || 'No data available for this symbol');
+    }
+
+    // Get price - prefer last, fall back to mid of bid/ask
+    let price = null;
+    if (data.last && data.last[0]) {
+        price = data.last[0];
+    } else if (data.bid && data.ask && data.bid[0] && data.ask[0]) {
+        price = (data.bid[0] + data.ask[0]) / 2;
+    } else if (data.mid && data.mid[0]) {
+        price = data.mid[0];
+    }
+
+    if (!price) {
+        throw new Error('No price data available for this symbol');
     }
 
     return {
-        price: data.last[0],
+        price: price,
         bid: data.bid ? data.bid[0] : null,
         ask: data.ask ? data.ask[0] : null,
         name: data.name ? data.name[0] : null
@@ -145,6 +168,7 @@ async function fetchStockQuote(ticker) {
  */
 async function fetchExpirations(ticker) {
     const url = `${MARKETDATA_API.baseUrl}/options/expirations/${ticker}/`;
+    console.log('Fetching expirations from:', url);
 
     const response = await fetch(url, {
         headers: {
@@ -152,11 +176,14 @@ async function fetchExpirations(ticker) {
         }
     });
 
+    console.log('Expirations response status:', response.status);
+
     if (!response.ok) {
         throw new Error('Failed to fetch expiration dates');
     }
 
     const data = await response.json();
+    console.log('Expirations data:', data);
 
     if (data.s !== 'ok' || !data.expirations || data.expirations.length === 0) {
         throw new Error('No options available for this symbol');
@@ -224,6 +251,7 @@ async function onExpirationChange() {
  */
 async function fetchStrikes(ticker, expiration) {
     const url = `${MARKETDATA_API.baseUrl}/options/strikes/${ticker}/?expiration=${expiration}`;
+    console.log('Fetching strikes from:', url);
 
     try {
         const response = await fetch(url, {
@@ -237,12 +265,16 @@ async function fetchStrikes(ticker, expiration) {
         }
 
         const data = await response.json();
+        console.log('Strikes data:', data);
 
-        if (data.s !== 'ok' || !data.strikes || data.strikes.length === 0) {
+        // MarketData.app returns strikes under the expiration date key, not "strikes"
+        const strikesArray = data[expiration] || data.strikes;
+
+        if (data.s !== 'ok' || !strikesArray || strikesArray.length === 0) {
             throw new Error('No strikes available');
         }
 
-        strikePrices = data.strikes.sort((a, b) => a - b);
+        strikePrices = strikesArray.sort((a, b) => a - b);
 
         // Populate strike dropdown
         const select = document.getElementById('strike-select');
@@ -288,9 +320,166 @@ async function fetchStrikes(ticker, expiration) {
 /**
  * Handle strike price selection
  */
-function onStrikeChange() {
+async function onStrikeChange() {
     const select = document.getElementById('strike-select');
     currentStrike = parseFloat(select.value);
+
+    // Hide sections if no strike selected
+    const quickQuoteSection = document.getElementById('quick-quote-section');
+    const identifiersSection = document.getElementById('option-identifiers-section');
+    const otmSection = document.getElementById('otm-section');
+
+    if (!currentStrike || !currentExpiration || !currentTicker) {
+        quickQuoteSection.style.display = 'none';
+        identifiersSection.style.display = 'none';
+        otmSection.style.display = 'none';
+        return;
+    }
+
+    // Calculate and display strike as % of stock price
+    otmSection.style.display = 'block';
+    const strikePercent = (currentStrike / currentStockPrice) * 100;
+    document.getElementById('strike-percent').textContent = strikePercent.toFixed(1) + '%';
+
+    // Determine OTM/ATM/ITM status
+    const otmStatusEl = document.getElementById('otm-status');
+    otmStatusEl.classList.remove('otm', 'atm', 'itm');
+
+    const percentDiff = Math.abs(strikePercent - 100);
+
+    if (percentDiff <= 2) {
+        // Within 2% of stock price = ATM
+        otmStatusEl.textContent = 'ATM';
+        otmStatusEl.classList.add('atm');
+    } else if (currentOptionType === 'put') {
+        // For puts: strike below stock = OTM, strike above stock = ITM
+        if (currentStrike < currentStockPrice) {
+            otmStatusEl.textContent = (100 - strikePercent).toFixed(1) + '% OTM';
+            otmStatusEl.classList.add('otm');
+        } else {
+            otmStatusEl.textContent = (strikePercent - 100).toFixed(1) + '% ITM';
+            otmStatusEl.classList.add('itm');
+        }
+    } else {
+        // For calls: strike above stock = OTM, strike below stock = ITM
+        if (currentStrike > currentStockPrice) {
+            otmStatusEl.textContent = (strikePercent - 100).toFixed(1) + '% OTM';
+            otmStatusEl.classList.add('otm');
+        } else {
+            otmStatusEl.textContent = (100 - strikePercent).toFixed(1) + '% ITM';
+            otmStatusEl.classList.add('itm');
+        }
+    }
+
+    // Build option symbol
+    const optionSymbol = buildOptionSymbol(currentTicker, currentExpiration, currentOptionType, currentStrike);
+
+    // Show identifiers section and populate option ticker
+    identifiersSection.style.display = 'block';
+    document.getElementById('option-ticker').textContent = optionSymbol;
+    document.getElementById('option-figi').textContent = 'Loading...';
+
+    // Show loading state for quick quote
+    quickQuoteSection.style.display = 'block';
+    document.getElementById('quick-bid').textContent = '...';
+    document.getElementById('quick-ask').textContent = '...';
+    document.getElementById('quick-mid').textContent = '...';
+
+    try {
+        // Fetch option quote and FIGI in parallel
+        const [optionData, figi] = await Promise.all([
+            fetchOptionData(optionSymbol),
+            fetchFIGI(optionSymbol)
+        ]);
+
+        // Update quick quote display
+        const bid = optionData.bid || 0;
+        const ask = optionData.ask || 0;
+        const mid = (bid + ask) / 2;
+
+        document.getElementById('quick-bid').textContent = '$' + bid.toFixed(2);
+        document.getElementById('quick-ask').textContent = '$' + ask.toFixed(2);
+        document.getElementById('quick-mid').textContent = '$' + mid.toFixed(2);
+
+        // Update FIGI
+        document.getElementById('option-figi').textContent = figi || 'Not available';
+
+    } catch (error) {
+        console.error('Error fetching quick quote:', error);
+        document.getElementById('quick-bid').textContent = '--';
+        document.getElementById('quick-ask').textContent = '--';
+        document.getElementById('quick-mid').textContent = '--';
+        document.getElementById('option-figi').textContent = 'Not available';
+    }
+}
+
+/**
+ * Fetch FIGI from OpenFIGI API
+ * Tries multiple lookup methods for options
+ */
+async function fetchFIGI(optionSymbol) {
+    // Parse option symbol to extract components
+    // Format: AAPL260130P00245000
+    const ticker = currentTicker;
+    const expDate = currentExpiration;
+    const optType = currentOptionType === 'call' ? 'Call' : 'Put';
+    const strike = currentStrike;
+
+    // Try multiple lookup methods
+    const lookupMethods = [
+        // Method 1: Direct OCC symbol lookup
+        [{
+            idType: 'TICKER',
+            idValue: optionSymbol,
+            securityType2: 'Option'
+        }],
+        // Method 2: Using option parameters with underlying ticker
+        [{
+            idType: 'TICKER',
+            idValue: ticker,
+            securityType2: 'Option',
+            expiration: [expDate, expDate],
+            strike: [strike, strike],
+            optionType: optType
+        }],
+        // Method 3: Exchange symbol with OPRA
+        [{
+            idType: 'ID_EXCH_SYMBOL',
+            idValue: optionSymbol,
+            micCode: 'OPRA',
+            securityType2: 'Option',
+            expiration: [expDate, expDate]
+        }]
+    ];
+
+    for (const body of lookupMethods) {
+        try {
+            const response = await fetch('https://api.openfigi.com/v3/mapping', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+
+            if (!response.ok) {
+                continue;
+            }
+
+            const data = await response.json();
+            console.log('OpenFIGI response:', data);
+
+            // Extract FIGI from response
+            if (data && data[0] && data[0].data && data[0].data[0] && data[0].data[0].figi) {
+                return data[0].data[0].figi;
+            }
+        } catch (error) {
+            console.log('OpenFIGI lookup method failed:', error);
+        }
+    }
+
+    // FIGI not found - this is common for options
+    return null;
 }
 
 /**
@@ -393,6 +582,7 @@ function buildOptionSymbol(ticker, expiration, type, strike) {
  */
 async function fetchOptionData(optionSymbol) {
     const url = `${MARKETDATA_API.baseUrl}/options/quotes/${optionSymbol}/`;
+    console.log('Fetching option quote from:', url);
 
     const response = await fetch(url, {
         headers: {
@@ -400,12 +590,16 @@ async function fetchOptionData(optionSymbol) {
         }
     });
 
+    console.log('Option quote response status:', response.status);
+
     if (!response.ok) {
+        console.log('Option quote failed, trying chain endpoint...');
         // Try alternative: fetch from chain
         return await fetchOptionFromChain();
     }
 
     const data = await response.json();
+    console.log('Option quote data:', data);
 
     if (data.s !== 'ok') {
         throw new Error('Invalid option data');
@@ -468,6 +662,29 @@ async function fetchOptionFromChain() {
 }
 
 /**
+ * Store current mid price for premium calculations
+ */
+let currentMidPrice = 0;
+
+/**
+ * Update premium calculation based on number of contracts
+ */
+function updatePremiumCalculation() {
+    const contractsInput = document.getElementById('yield-contracts');
+    const contracts = parseInt(contractsInput.value) || 1;
+
+    // Calculate projected premium received: contracts × 100 × mid price
+    const projectedPremium = contracts * 100 * currentMidPrice;
+
+    // Calculate total notional exposure: strike × contracts × 100
+    const totalNotional = currentStrike * contracts * 100;
+
+    // Update display
+    document.getElementById('projected-premium').textContent = formatCurrency(projectedPremium);
+    document.getElementById('total-notional').textContent = formatCurrency(totalNotional);
+}
+
+/**
  * Calculate and display seller's yield analysis
  */
 function calculateYieldAnalysis(S, K, days, premium, type) {
@@ -475,6 +692,12 @@ function calculateYieldAnalysis(S, K, days, premium, type) {
         resetYieldDisplay();
         return;
     }
+
+    // Store mid price for contract calculations
+    currentMidPrice = premium;
+
+    // Update premium calculation with current values
+    updatePremiumCalculation();
 
     // Period yield: Premium / Stock Price
     const periodYield = premium / S;
@@ -546,6 +769,11 @@ function resetYieldDisplay() {
      'capital-required', 'assigned-return', 'assigned-annualized', 'effective-price'].forEach(id => {
         updateDisplay(id, '--');
     });
+
+    // Reset premium calculations
+    currentMidPrice = 0;
+    document.getElementById('projected-premium').textContent = '--';
+    document.getElementById('total-notional').textContent = '--';
 }
 
 /**
@@ -585,11 +813,14 @@ function updateDisplay(id, value, colorClass = null) {
 }
 
 /**
- * Format number to currency
+ * Format number to currency with commas
  */
 function formatCurrency(value) {
     if (isNaN(value) || !isFinite(value)) return '--';
-    return '$' + value.toFixed(2);
+    return '$' + value.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
 }
 
 /**
@@ -605,6 +836,14 @@ function formatYieldPercent(value) {
  */
 function init() {
     const tickerInput = document.getElementById('ticker');
+
+    // Check if running from file:// protocol (won't work due to CORS)
+    if (window.location.protocol === 'file:') {
+        const statusEl = document.getElementById('fetch-status');
+        statusEl.innerHTML = '<strong>Server Required:</strong> Double-click start-server.bat then open <a href="http://localhost:8000" style="color: #0066cc;">http://localhost:8000</a>';
+        statusEl.className = 'status-message error';
+        return;
+    }
 
     // Auto-fetch on ticker input
     tickerInput.addEventListener('input', onTickerInput);
@@ -636,6 +875,12 @@ function copyOrderToClipboard() {
     const ask = document.getElementById('option-ask').textContent;
     const mid = document.getElementById('current-price').textContent;
 
+    // Get number of contracts from user input
+    const contracts = parseInt(document.getElementById('yield-contracts').value) || 1;
+
+    // Calculate total premium
+    const totalPremium = contracts * 100 * currentMidPrice;
+
     // Format expiration date
     const expDate = new Date(currentExpiration + 'T00:00:00');
     const expFormatted = expDate.toLocaleDateString('en-US', {
@@ -655,7 +900,7 @@ SYMBOL:     ${currentTicker}
 TYPE:       ${currentOptionType.toUpperCase()}
 STRIKE:     $${currentStrike.toFixed(2)}
 EXPIRATION: ${expFormatted}
-CONTRACTS:  1
+CONTRACTS:  ${contracts}
 
 ───────────────────────────────────────
 PRICING
@@ -665,6 +910,7 @@ ASK:        ${ask}
 MID PRICE:  ${mid}
 
 SUGGESTED LIMIT: ${mid} (mid price)
+TOTAL PREMIUM:   ${formatCurrency(totalPremium)} (${contracts} × 100 × ${mid})
 
 ───────────────────────────────────────
 OCC OPTION SYMBOL

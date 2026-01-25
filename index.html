@@ -78,7 +78,51 @@
                     </select>
                 </div>
 
-                <button class="calculate-btn" onclick="fetchOptionQuote()">Get Option Quote</button>
+                <!-- Strike % of Stock Price (OTM indicator) -->
+                <div class="otm-display" id="otm-section" style="display: none;">
+                    <div class="otm-content">
+                        <span class="otm-label">Strike as % of Stock Price</span>
+                        <span class="otm-value" id="strike-percent">--</span>
+                        <span class="otm-status" id="otm-status">--</span>
+                    </div>
+                </div>
+
+                <!-- Option Contract Identifiers (shows on strike selection) -->
+                <div class="option-identifiers" id="option-identifiers-section" style="display: none;">
+                    <div class="identifier-row">
+                        <div class="identifier-item">
+                            <span class="identifier-label">Option Ticker (OCC Symbol)</span>
+                            <span class="identifier-value" id="option-ticker">--</span>
+                        </div>
+                    </div>
+                    <div class="identifier-row">
+                        <div class="identifier-item">
+                            <span class="identifier-label">FIGI</span>
+                            <span class="identifier-value" id="option-figi">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Quote Preview (shows immediately on strike selection) -->
+                <div class="quick-quote-display" id="quick-quote-section" style="display: none;">
+                    <div class="quick-quote-grid">
+                        <div class="quick-quote-card bid">
+                            <span class="quick-quote-label">Bid</span>
+                            <span class="quick-quote-value" id="quick-bid">--</span>
+                        </div>
+                        <div class="quick-quote-card ask">
+                            <span class="quick-quote-label">Ask</span>
+                            <span class="quick-quote-value" id="quick-ask">--</span>
+                        </div>
+                        <div class="quick-quote-card mid">
+                            <span class="quick-quote-label">Mid Price</span>
+                            <span class="quick-quote-value" id="quick-mid">--</span>
+                            <span class="quick-quote-sublabel">(Bid + Ask) / 2</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="calculate-btn" onclick="fetchOptionQuote()">Get Full Quote & Analysis</button>
 
                 <!-- Option Bid/Ask Display -->
                 <div class="option-quote-display" id="option-quote-section" style="display: none;">
@@ -208,6 +252,26 @@
         <section class="yield-section">
             <h2>Seller's Yield Analysis</h2>
             <p class="yield-subtitle">Premium income for selling this option (using mid price: avg of bid & ask)</p>
+
+            <!-- Contract Input and Premium Calculator -->
+            <div class="contract-calculator">
+                <div class="contract-input-group">
+                    <label for="yield-contracts">Number of Contracts</label>
+                    <input type="number" id="yield-contracts" value="1" min="1" max="9999" onchange="updatePremiumCalculation()" oninput="updatePremiumCalculation()">
+                </div>
+                <div class="premium-results">
+                    <div class="premium-card">
+                        <span class="premium-label">Projected Premium Received</span>
+                        <span class="premium-value" id="projected-premium">--</span>
+                        <span class="premium-formula">Contracts × 100 × Mid Price</span>
+                    </div>
+                    <div class="premium-card">
+                        <span class="premium-label">Total Notional Exposure</span>
+                        <span class="premium-value" id="total-notional">--</span>
+                        <span class="premium-formula">Strike × Contracts × 100</span>
+                    </div>
+                </div>
+            </div>
 
             <div class="yield-hero">
                 <div class="yield-hero-card">

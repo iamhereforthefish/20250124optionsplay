@@ -29,6 +29,89 @@
     margin-bottom: 1.5rem;
 }
 
+/* Contract Calculator */
+.contract-calculator {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 2px solid var(--primary);
+}
+
+.contract-input-group {
+    margin-bottom: 1rem;
+}
+
+.contract-input-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.contract-input-group input {
+    width: 150px;
+    padding: 0.75rem 1rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-align: center;
+    background: var(--bg-input);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-primary);
+}
+
+.contract-input-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(13, 115, 119, 0.2);
+}
+
+.premium-results {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 600px) {
+    .premium-results {
+        grid-template-columns: 1fr;
+    }
+}
+
+.premium-card {
+    background: linear-gradient(135deg, var(--primary), #0a5a5c);
+    border-radius: 10px;
+    padding: 1.25rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.premium-label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.premium-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.premium-formula {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+}
+
 /* Hero Yield Display */
 .yield-hero {
     display: flex;

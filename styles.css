@@ -139,6 +139,10 @@ section h3 {
 
 .status-message.error {
     color: var(--danger);
+    background: rgba(220, 38, 38, 0.1);
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    border: 1px solid rgba(220, 38, 38, 0.3);
 }
 
 .status-message.loading {
@@ -718,4 +722,167 @@ footer p {
 
 .negative {
     color: var(--danger) !important;
+}
+
+/* OTM Display */
+.otm-display {
+    margin-top: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.otm-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.otm-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.otm-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.otm-status {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+
+.otm-status.otm {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--success);
+}
+
+.otm-status.atm {
+    background: rgba(217, 119, 6, 0.15);
+    color: var(--warning);
+}
+
+.otm-status.itm {
+    background: rgba(220, 38, 38, 0.15);
+    color: var(--danger);
+}
+
+/* Option Identifiers Display */
+.option-identifiers {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.identifier-row {
+    margin-bottom: 0.75rem;
+}
+
+.identifier-row:last-child {
+    margin-bottom: 0;
+}
+
+.identifier-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.identifier-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.identifier-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: 'Consolas', 'Monaco', monospace;
+    background: rgba(13, 115, 119, 0.1);
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    word-break: break-all;
+}
+
+/* Quick Quote Display (shown on strike selection) */
+.quick-quote-display {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+    border-radius: 10px;
+    border: 2px solid var(--primary);
+}
+
+.quick-quote-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.quick-quote-card {
+    text-align: center;
+    padding: 0.75rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.quick-quote-card.bid {
+    border-bottom: 3px solid var(--success);
+}
+
+.quick-quote-card.ask {
+    border-bottom: 3px solid var(--danger);
+}
+
+.quick-quote-card.mid {
+    border-bottom: 3px solid var(--primary);
+    background: rgba(13, 115, 119, 0.1);
+}
+
+.quick-quote-label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.quick-quote-value {
+    display: block;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.quick-quote-card.bid .quick-quote-value {
+    color: var(--success);
+}
+
+.quick-quote-card.ask .quick-quote-value {
+    color: var(--danger);
+}
+
+.quick-quote-card.mid .quick-quote-value {
+    color: var(--primary);
+}
+
+.quick-quote-sublabel {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
 }
