@@ -860,6 +860,95 @@ function init() {
     if (typeof PLChart !== 'undefined') {
         PLChart.position = 'short';
     }
+
+    // Check for URL parameters and auto-populate
+    handleUrlParameters();
+}
+
+/**
+ * Handle URL parameters to pre-populate form
+ * Supports: ?ticker=AAPL&type=put&exp=2026-02-21&strike=245
+ */
+async function handleUrlParameters() {
+    const params = new URLSearchParams(window.location.search);
+
+    const ticker = params.get('ticker');
+    const type = params.get('type');
+    const exp = params.get('exp');
+    const strike = params.get('strike');
+
+    if (!ticker) return;
+
+    // Set ticker input
+    document.getElementById('ticker').value = ticker.toUpperCase();
+
+    // Set option type if provided
+    if (type && (type === 'put' || type === 'call')) {
+        setOptionType(type);
+    }
+
+    // Show loading status
+    const statusEl = document.getElementById('fetch-status');
+    statusEl.textContent = 'Loading from URL parameters...';
+    statusEl.className = 'status-message loading';
+
+    try {
+        // Fetch market data for the ticker
+        await fetchMarketData(ticker);
+
+        // Wait a moment for expirations to load
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Set expiration if provided
+        if (exp) {
+            const expirationSelect = document.getElementById('expiration-select');
+            expirationSelect.value = exp;
+
+            if (expirationSelect.value === exp) {
+                await onExpirationChange();
+
+                // Wait for strikes to load
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // Set strike if provided
+                if (strike) {
+                    const strikeSelect = document.getElementById('strike-select');
+                    const strikeValue = parseFloat(strike);
+
+                    // Find the closest strike option
+                    let closestOption = null;
+                    let closestDiff = Infinity;
+
+                    for (const option of strikeSelect.options) {
+                        const optionStrike = parseFloat(option.value);
+                        if (!isNaN(optionStrike)) {
+                            const diff = Math.abs(optionStrike - strikeValue);
+                            if (diff < closestDiff) {
+                                closestDiff = diff;
+                                closestOption = option;
+                            }
+                        }
+                    }
+
+                    if (closestOption) {
+                        strikeSelect.value = closestOption.value;
+                        await onStrikeChange();
+
+                        // Auto-fetch full quote
+                        await fetchOptionQuote();
+                    }
+                }
+            }
+        }
+
+        statusEl.textContent = 'Loaded from screener';
+        statusEl.className = 'status-message success';
+
+    } catch (error) {
+        console.error('Error loading from URL parameters:', error);
+        statusEl.textContent = 'Loaded ticker - select expiration and strike';
+        statusEl.className = 'status-message';
+    }
 }
 
 /**
