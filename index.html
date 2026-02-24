@@ -16,14 +16,14 @@
         </header>
 
         <!-- Full-screen password gate -->
-        <div id="api-key-section" style="display:none; position:fixed; inset:0; background:#0d0d1a; z-index:9999; align-items:center; justify-content:center;">
-            <div style="background:#1a1a2e; border:1px solid #4a9eff; border-radius:12px; padding:36px 40px; max-width:420px; width:90%; text-align:center; box-shadow:0 0 40px rgba(74,158,255,0.15);">
-                <div style="font-size:2rem; margin-bottom:12px;">🔒</div>
-                <h2 style="margin:0 0 8px; color:#4a9eff; font-size:1.3rem;">Private Tool</h2>
-                <p style="margin:0 0 24px; color:#aaa; font-size:0.875rem;">Enter the password shared with you to continue.</p>
+        <div id="api-key-section" style="display:none; position:fixed; inset:0; background:#f0f2f5; z-index:9999; align-items:center; justify-content:center;">
+            <div style="background:#ffffff; border-radius:16px; padding:40px 44px; max-width:420px; width:90%; text-align:center; box-shadow:0 8px 40px rgba(0,0,0,0.12);">
+                <img src="logo.png" alt="RPG Logo" style="height:72px; margin-bottom:20px;">
+                <h2 style="margin:0 0 6px; color:#1a1a2e; font-size:1.3rem; font-weight:700;">RPG Secured Site</h2>
+                <p style="margin:0 0 24px; color:#666; font-size:0.875rem;">Enter the password shared with you to continue.</p>
                 <div style="display:flex; gap:8px;">
-                    <input type="password" id="api-key-input" placeholder="Site password" style="flex:1; padding:10px 14px; border-radius:6px; border:1px solid #444; background:#0d0d1a; color:#fff; font-size:0.9rem;" onkeydown="if(event.key==='Enter') submitApiKey()">
-                    <button onclick="submitApiKey()" style="padding:10px 20px; background:#4a9eff; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:0.9rem; font-weight:600;">Enter</button>
+                    <input type="password" id="api-key-input" placeholder="Site password" style="flex:1; padding:10px 14px; border-radius:6px; border:1px solid #ddd; background:#f9f9f9; color:#1a1a2e; font-size:0.9rem;" onkeydown="if(event.key==='Enter') submitApiKey()">
+                    <button onclick="submitApiKey()" style="padding:10px 20px; background:#1a2e4a; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:0.9rem; font-weight:600;">Enter</button>
                 </div>
             </div>
         </div>
