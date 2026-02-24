@@ -19,11 +19,15 @@ function clearApiToken() {
 }
 
 function showApiKeySection() {
-    document.getElementById('api-key-section').style.display = 'block';
+    document.getElementById('api-key-section').style.display = 'flex';
+    document.querySelector('main').style.display = 'none';
+    document.getElementById('site-footer').style.display = 'none';
 }
 
 function hideApiKeySection() {
     document.getElementById('api-key-section').style.display = 'none';
+    document.querySelector('main').style.display = '';
+    document.getElementById('site-footer').style.display = '';
 }
 
 function submitApiKey() {
@@ -31,10 +35,11 @@ function submitApiKey() {
     if (!input) { alert('Please enter the site password.'); return; }
     saveApiToken(input);
     hideApiKeySection();
+    init();
 }
 
 function changeApiKey() {
-    document.getElementById('api-key-input').value = MARKETDATA_API.token;
+    document.getElementById('api-key-input').value = '';
     showApiKeySection();
 }
 

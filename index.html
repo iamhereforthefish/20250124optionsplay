@@ -15,17 +15,20 @@
             <p class="subtitle">Find the highest yielding options to sell</p>
         </header>
 
-        <!-- API Key Setup -->
-        <div id="api-key-section" style="display:none; background:#1a1a2e; border:1px solid #4a9eff; border-radius:8px; padding:16px 20px; margin-bottom:20px;">
-            <h3 style="margin:0 0 8px; color:#4a9eff; font-size:1rem;">Site Password Required</h3>
-            <p style="margin:0 0 12px; font-size:0.875rem; color:#aaa;">This tool is private. Enter the password shared with you. It will be saved in your browser.</p>
-            <div style="display:flex; gap:8px; align-items:center;">
-                <input type="password" id="api-key-input" placeholder="Enter site password" style="flex:1; padding:8px 12px; border-radius:6px; border:1px solid #444; background:#0d0d1a; color:#fff; font-size:0.875rem;">
-                <button onclick="submitApiKey()" style="padding:8px 16px; background:#4a9eff; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:0.875rem;">Save</button>
+        <!-- Full-screen password gate -->
+        <div id="api-key-section" style="display:none; position:fixed; inset:0; background:#0d0d1a; z-index:9999; align-items:center; justify-content:center;">
+            <div style="background:#1a1a2e; border:1px solid #4a9eff; border-radius:12px; padding:36px 40px; max-width:420px; width:90%; text-align:center; box-shadow:0 0 40px rgba(74,158,255,0.15);">
+                <div style="font-size:2rem; margin-bottom:12px;">🔒</div>
+                <h2 style="margin:0 0 8px; color:#4a9eff; font-size:1.3rem;">Private Tool</h2>
+                <p style="margin:0 0 24px; color:#aaa; font-size:0.875rem;">Enter the password shared with you to continue.</p>
+                <div style="display:flex; gap:8px;">
+                    <input type="password" id="api-key-input" placeholder="Site password" style="flex:1; padding:10px 14px; border-radius:6px; border:1px solid #444; background:#0d0d1a; color:#fff; font-size:0.9rem;" onkeydown="if(event.key==='Enter') submitApiKey()">
+                    <button onclick="submitApiKey()" style="padding:10px 20px; background:#4a9eff; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:0.9rem; font-weight:600;">Enter</button>
+                </div>
             </div>
         </div>
 
-        <main>
+        <main style="display:none;">
             <section class="input-section">
                 <h2>Select Option Contract</h2>
 
@@ -381,7 +384,7 @@
             </div>
         </section>
 
-        <footer>
+        <footer style="display:none;" id="site-footer">
             <p>Real-time options data from MarketData.app. Black-Scholes shown for reference only. | <a href="#" onclick="changeApiKey(); return false;" style="color:#4a9eff;">Change Password</a></p>
         </footer>
     </div>
