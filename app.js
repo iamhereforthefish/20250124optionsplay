@@ -155,7 +155,7 @@ async function fetchStockQuote(ticker) {
 
     const response = await fetch(url, {
         headers: {
-            'Authorization': `Token ${MARKETDATA_API.token}`
+            'Authorization': `Bearer ${MARKETDATA_API.token}`
         }
     });
 
@@ -205,7 +205,7 @@ async function fetchExpirations(ticker) {
 
     const response = await fetch(url, {
         headers: {
-            'Authorization': `Token ${MARKETDATA_API.token}`
+            'Authorization': `Bearer ${MARKETDATA_API.token}`
         }
     });
 
@@ -289,7 +289,7 @@ async function fetchStrikes(ticker, expiration) {
     try {
         const response = await fetch(url, {
             headers: {
-                'Authorization': `Token ${MARKETDATA_API.token}`
+                'Authorization': `Bearer ${MARKETDATA_API.token}`
             }
         });
 
@@ -619,7 +619,7 @@ async function fetchOptionData(optionSymbol) {
 
     const response = await fetch(url, {
         headers: {
-            'Authorization': `Token ${MARKETDATA_API.token}`
+            'Authorization': `Bearer ${MARKETDATA_API.token}`
         }
     });
 
@@ -662,7 +662,7 @@ async function fetchOptionFromChain() {
 
     const response = await fetch(url, {
         headers: {
-            'Authorization': `Token ${MARKETDATA_API.token}`
+            'Authorization': `Bearer ${MARKETDATA_API.token}`
         }
     });
 
