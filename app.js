@@ -7,15 +7,15 @@
 // Proxy configuration — points at Cloudflare Worker, not MarketData.app directly
 const MARKETDATA_API = {
     baseUrl: 'https://marketdata-proxy.rpgrealtimemarketdata.workers.dev/v1',
-    get token() { return localStorage.getItem('site_access_token') || ''; }
+    get token() { return sessionStorage.getItem('site_access_token') || ''; }
 };
 
 function saveApiToken(token) {
-    localStorage.setItem('site_access_token', token.trim());
+    sessionStorage.setItem('site_access_token', token.trim());
 }
 
 function clearApiToken() {
-    localStorage.removeItem('site_access_token');
+    sessionStorage.removeItem('site_access_token');
 }
 
 function showApiKeySection() {
