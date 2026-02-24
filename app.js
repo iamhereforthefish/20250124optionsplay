@@ -4,11 +4,39 @@
  * All data from MarketData.app API
  */
 
-// MarketData.app API configuration
+// Proxy configuration — points at Cloudflare Worker, not MarketData.app directly
 const MARKETDATA_API = {
-    baseUrl: 'https://api.marketdata.app/v1',
-    token: 'X0htSHRqcThNTGJuOUVOb1YxQVRMcGN3cl9XdTd2Y3lrV2ZWN2wzc2FQMD0'
+    baseUrl: 'https://marketdata-proxy.rpgrealtimemarketdata.workers.dev',
+    get token() { return localStorage.getItem('site_access_token') || ''; }
 };
+
+function saveApiToken(token) {
+    localStorage.setItem('site_access_token', token.trim());
+}
+
+function clearApiToken() {
+    localStorage.removeItem('site_access_token');
+}
+
+function showApiKeySection() {
+    document.getElementById('api-key-section').style.display = 'block';
+}
+
+function hideApiKeySection() {
+    document.getElementById('api-key-section').style.display = 'none';
+}
+
+function submitApiKey() {
+    const input = document.getElementById('api-key-input').value.trim();
+    if (!input) { alert('Please enter the site password.'); return; }
+    saveApiToken(input);
+    hideApiKeySection();
+}
+
+function changeApiKey() {
+    document.getElementById('api-key-input').value = MARKETDATA_API.token;
+    showApiKeySection();
+}
 
 // Application state
 let currentOptionType = 'put'; // Default to put for selling
@@ -843,6 +871,11 @@ function init() {
         statusEl.innerHTML = '<strong>Server Required:</strong> Double-click start-server.bat then open <a href="http://localhost:8000" style="color: #0066cc;">http://localhost:8000</a>';
         statusEl.className = 'status-message error';
         return;
+    }
+
+    // Show API key setup if no token saved
+    if (!MARKETDATA_API.token) {
+        showApiKeySection();
     }
 
     // Auto-fetch on ticker input
