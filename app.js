@@ -881,7 +881,9 @@ function init() {
     // Show API key setup if no token saved
     if (!MARKETDATA_API.token) {
         showApiKeySection();
+        return;
     }
+    hideApiKeySection();
 
     // Auto-fetch on ticker input
     tickerInput.addEventListener('input', onTickerInput);
